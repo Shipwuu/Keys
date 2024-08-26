@@ -1,0 +1,9 @@
+workspace.Maps.Gymnasium.ItemHuntFolder.ItemSpawn:GetChildren()[31].SpawnPoint_1￼Enter
+
+workspace.Maps.Gymnasium.ItemHuntFolder.ItemSpawn:GetChildren()[31].SpawnPoint_1.InteractPrompt
+
+workspace.Maps.Gymnasium.ItemHuntFolder.ItemSpawn:GetChildren()[31].SpawnPoint_1.ToolModel["Meshes/suo_LOCK01"]
+
+workspace.Maps.DreamPark.ItemHuntFolder.ItemSpawn:GetChildren()[104].Point_1
+
+workspace.Maps.DreamPark.ItemHuntFolder.ItemPlace:GetChildren()[26].ControlPart.WeldConstraint
