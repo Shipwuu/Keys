@@ -26,3 +26,6 @@ TERIMA KASIH
 
 
 workspace.Maps.Sandbeach.ItemHuntFolder.ItemSpawn:GetChildren()[12].Point_1
+
+workspace.Maps.Community.ItemHuntFolder.ItemPlace:GetChildren()[2].ExitRoot.TouchInterest
+workspace.Maps.SpaceStation.ItemHuntFolder.ItemPlace:GetChildren()[7].ControlPart.InteractPrompt
