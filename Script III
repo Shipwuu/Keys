@@ -1,0 +1,110 @@
+-- Services
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
+
+-- Get the player's GUI
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- Function to create the button
+local function createButton()
+    -- Check for existing GUI elements and destroy if found (to prevent duplication)
+    local existingButtonGui = playerGui:FindFirstChild("TouchInterestButtonGui")
+    if existingButtonGui then
+        existingButtonGui:Destroy()
+    end
+
+    -- Create a ScreenGui for the Touch Interest button
+    local buttonGui = Instance.new("ScreenGui")
+    buttonGui.Name = "TouchInterestButtonGui"
+    buttonGui.Parent = playerGui
+    buttonGui.ResetOnSpawn = false
+
+    -- Create the Touch Interest button
+    local touchInterestButton = Instance.new("TextButton")
+    touchInterestButton.Name = "TouchInterestButton"
+    touchInterestButton.Size = UDim2.new(0, 150, 0, 50) -- Button size (150x50 pixels)
+    touchInterestButton.Position = UDim2.new(0, 100, 0, 20) -- Positioned at the top left of the screen but towards the middle
+    touchInterestButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Black background color
+    touchInterestButton.BackgroundTransparency = 0.5 -- Set initial transparency
+    touchInterestButton.TextColor3 = Color3.new(1, 1, 1) -- White text color
+    touchInterestButton.Font = Enum.Font.SourceSansBold
+    touchInterestButton.TextSize = 14
+    touchInterestButton.Text = "Fire Touch Interest"
+    touchInterestButton.Visible = false -- Start hidden
+    touchInterestButton.Parent = buttonGui
+
+    -- Add UICorner to the button for rounded edges
+    local corner1 = Instance.new("UICorner")
+    corner1.Parent = touchInterestButton
+
+    -- Function to fire touch interest
+    local function fireTouchInterest()
+        for _, map in pairs(Workspace:FindFirstChild("Maps"):GetChildren()) do
+            if map:FindFirstChild("ItemHuntFolder") then
+                local itemPlace = map.ItemHuntFolder:FindFirstChild("ItemPlace")
+                if itemPlace then
+                    for _, item in pairs(itemPlace:GetChildren()) do
+                        local exitRoot = item:FindFirstChild("ExitRoot")
+                        if exitRoot and exitRoot:FindFirstChild("TouchInterest") then
+                            print("Firing TouchInterest on:", exitRoot.Name)
+                            pcall(function()
+                                firetouchinterest(exitRoot, player.Character.HumanoidRootPart, 1)
+                                wait(0.1) -- Small delay to ensure interaction
+                                firetouchinterest(exitRoot, player.Character.HumanoidRootPart, 0)
+                            end)
+                            -- Destroy the button after use
+                            buttonGui:Destroy()
+                            return
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    -- Connect button click to fire touch interest
+    touchInterestButton.MouseButton1Click:Connect(fireTouchInterest)
+end
+
+-- Function to check if TouchInterest exists and show/hide button accordingly
+local function checkForTouchInterest()
+    local touchInterestFound = false
+    for _, map in pairs(Workspace:FindFirstChild("Maps"):GetChildren()) do
+        if map:FindFirstChild("ItemHuntFolder") then
+            local itemPlace = map.ItemHuntFolder:FindFirstChild("ItemPlace")
+            if itemPlace then
+                for _, item in pairs(itemPlace:GetChildren()) do
+                    local exitRoot = item:FindFirstChild("ExitRoot")
+                    if exitRoot and exitRoot:FindFirstChild("TouchInterest") then
+                        touchInterestFound = true
+                        break
+                    end
+                end
+            end
+        end
+    end
+
+    if touchInterestFound then
+        if not playerGui:FindFirstChild("TouchInterestButtonGui") then
+            createButton() -- Create button if it doesn't exist
+        end
+        local buttonGui = playerGui:FindFirstChild("TouchInterestButtonGui")
+        if buttonGui then
+            buttonGui.TouchInterestButton.Visible = true -- Show button if TouchInterest is found
+        end
+    else
+        local buttonGui = playerGui:FindFirstChild("TouchInterestButtonGui")
+        if buttonGui then
+            buttonGui:Destroy() -- Destroy the button if no TouchInterest is found
+        end
+    end
+end
+
+-- Continuously check for the existence of TouchInterest in the game and reset button if needed
+RunService.RenderStepped:Connect(function()
+    checkForTouchInterest()
+end)
+
+print("Done III")
