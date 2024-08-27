@@ -1,0 +1,160 @@
+-- Services
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
+
+-- Get the player's GUI
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- Check for existing GUI elements and destroy if found (to prevent duplication)
+local existingButtonGui = playerGui:FindFirstChild("ControlPartButtonGui")
+if existingButtonGui then
+    existingButtonGui:Destroy()
+end
+
+-- Create a ScreenGui for the control part buttons
+local buttonGui = Instance.new("ScreenGui")
+buttonGui.Name = "ControlPartButtonGui"
+buttonGui.Parent = playerGui
+buttonGui.ResetOnSpawn = false
+
+-- Create the auto fire toggle button
+local autoFireButton = Instance.new("TextButton")
+autoFireButton.Name = "AutoFireButton"
+autoFireButton.Size = UDim2.new(0, 100, 0, 50) -- Button size (100x50 pixels)
+autoFireButton.Position = UDim2.new(1, -400, 1, -100) -- Positioned at the bottom right of the screen
+autoFireButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Black background color
+autoFireButton.BackgroundTransparency = 0.5 -- Set transparency
+autoFireButton.TextColor3 = Color3.new(1, 1, 1) -- White text color
+autoFireButton.Font = Enum.Font.SourceSansBold
+autoFireButton.TextSize = 14
+autoFireButton.Text = "Toggle Auto Fire"
+autoFireButton.Parent = buttonGui
+
+-- Add UICorner to the button for rounded edges
+local corner1 = Instance.new("UICorner")
+corner1.Parent = autoFireButton
+
+-- Create the billboard toggle button
+local billboardButton = Instance.new("TextButton")
+billboardButton.Name = "BillboardButton"
+billboardButton.Size = UDim2.new(0, 100, 0, 50) -- Button size (100x50 pixels)
+billboardButton.Position = UDim2.new(1, -400, 1, -160) -- Positioned just above the auto fire button
+billboardButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Black background color
+billboardButton.BackgroundTransparency = 0.5 -- Set transparency
+billboardButton.TextColor3 = Color3.new(1, 1, 1) -- White text color
+billboardButton.Font = Enum.Font.SourceSansBold
+billboardButton.TextSize = 14
+billboardButton.Text = "Toggle Billboard"
+billboardButton.Parent = buttonGui
+
+-- Add UICorner to the button for rounded edges
+local corner2 = Instance.new("UICorner")
+corner2.Parent = billboardButton
+
+-- Variables to keep track of auto fire and billboard state
+local autoFireEnabled = false
+local billboardVisible = false
+local billboards = {}
+
+-- Function to toggle auto fire
+local function toggleAutoFire()
+    autoFireEnabled = not autoFireEnabled
+    autoFireButton.Text = autoFireEnabled and "Auto Fire: ON" or "Auto Fire: OFF"
+    autoFireButton.BackgroundColor3 = autoFireEnabled and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
+    autoFireButton.BackgroundTransparency = 0.5
+end
+
+-- Function to toggle the visibility of all billboards
+local function toggleBillboards()
+    billboardVisible = not billboardVisible
+    billboardButton.Text = billboardVisible and "Hide Billboards" or "Show Billboards"
+    billboardButton.BackgroundColor3 = billboardVisible and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
+    billboardButton.BackgroundTransparency = 0.5
+    for _, billboard in pairs(billboards) do
+        billboard.Enabled = billboardVisible
+    end
+end
+
+-- Function to create or update billboards for each ControlPart
+local function updateBillboards()
+    -- Clear old billboards
+    for _, billboard in pairs(billboards) do
+        billboard:Destroy()
+    end
+    table.clear(billboards)
+
+    -- Create new billboards
+    for _, map in pairs(Workspace.Maps:GetChildren()) do
+        if map:FindFirstChild("ItemHuntFolder") then
+            local itemPlace = map.ItemHuntFolder:FindFirstChild("ItemPlace")
+            if itemPlace then
+                for _, item in pairs(itemPlace:GetChildren()) do
+                    if item.Name:match("^LockDoor_" .. map.Name) then
+                        local controlPart = item:FindFirstChild("ControlPart")
+                        if controlPart and controlPart:FindFirstChild("InteractPrompt") then
+                            local billboard = Instance.new("BillboardGui")
+                            billboard.Name = "ControlPartBillboard"
+                            billboard.Size = UDim2.new(0, 50, 0, 20) -- Small size for the billboard
+                            billboard.StudsOffset = Vector3.new(0, 2, 0)
+                            billboard.AlwaysOnTop = true
+                            billboard.Enabled = billboardVisible -- Set initial visibility
+                            billboard.Adornee = controlPart
+
+                            local textLabel = Instance.new("TextLabel")
+                            textLabel.Size = UDim2.new(1, 0, 1, 0)
+                            textLabel.BackgroundTransparency = 1
+                            textLabel.TextStrokeTransparency = 0.8 -- Slightly transparent stroke
+                            textLabel.TextColor3 = Color3.fromRGB(0, 0, 255) -- Blue text color
+                            textLabel.Text = "Doors" -- Changed all billboard text to "Doors"
+                            textLabel.Font = Enum.Font.SourceSansBold
+                            textLabel.TextSize = 12
+                            textLabel.TextStrokeColor3 = Color3.new(0, 0, 0) -- Black outline
+                            textLabel.Parent = billboard
+
+                            billboard.Parent = controlPart
+                            table.insert(billboards, billboard)
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+-- Function to auto fire proximity prompt
+local function autoFireProximityPrompt()
+    for _, map in pairs(Workspace.Maps:GetChildren()) do
+        if map:FindFirstChild("ItemHuntFolder") then
+            local itemPlace = map.ItemHuntFolder:FindFirstChild("ItemPlace")
+            if itemPlace then
+                for _, item in pairs(itemPlace:GetChildren()) do
+                    if item.Name:match("^LockDoor_" .. map.Name) then
+                        local controlPart = item:FindFirstChild("ControlPart")
+                        if controlPart and controlPart:FindFirstChild("InteractPrompt") then
+                            local proximityPrompt = controlPart.InteractPrompt
+                            if autoFireEnabled then
+                                pcall(function()
+                                    fireproximityprompt(proximityPrompt)
+                                end)
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+-- Connect button click to execute the toggle functions
+autoFireButton.MouseButton1Click:Connect(toggleAutoFire)
+billboardButton.MouseButton1Click:Connect(toggleBillboards)
+
+-- Start monitoring and auto firing
+RunService.RenderStepped:Connect(function()
+    if autoFireEnabled then
+        autoFireProximityPrompt()
+    end
+    updateBillboards() -- Continuously update billboards
+end)
