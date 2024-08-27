@@ -1,3 +1,4 @@
 game:GetService("Workspace").Maps.School.ItemHuntFolder.ItemPlace.LockDoor_school.ControlPart
 game:GetService("Workspace").Maps.DreamPark.ItemHuntFolder.ItemPlace.LockDoor_AmusementPark2.ControlPart
 game:GetService("Workspace").Maps.Steamboat.ItemHuntFolder.ItemPlace.LockDoor_Steamer.ControlPart
+game:GetService("Workspace").Maps.DreamPark.ItemHuntFolder.ItemPlace.LockDoor_AmusementPark2.ControlPart
