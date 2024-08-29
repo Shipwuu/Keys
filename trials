@@ -168,6 +168,14 @@ local function checkForKey()
     return playerPath:FindFirstChild("SecretKey") ~= nil
 end
 
+-- Function to remove all billboards
+local function clearBillboards()
+    for _, billboard in pairs(billboards) do
+        billboard:Destroy()
+    end
+    table.clear(billboards)
+end
+
 -- Function to manage the state based on key detection
 local function manageState()
     if not billboardEnabled and not autoFireEnabled then return end  -- Only run detection if any toggle is ON
@@ -187,6 +195,11 @@ end
 billboardButton.MouseButton1Click:Connect(function()
     billboardEnabled = not billboardEnabled
     billboardButton.Text = billboardEnabled and "Billboard: ON" or "Billboard: OFF"
+    
+    -- Clear billboards when the toggle is turned off
+    if not billboardEnabled then
+        clearBillboards()
+    end
 end)
 
 autoFireButton.MouseButton1Click:Connect(function()
