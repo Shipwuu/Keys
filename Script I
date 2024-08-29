@@ -85,37 +85,35 @@ local function updateBillboards()
     end
     table.clear(billboards)
 
-    -- Create new billboards
+    -- Create new billboards for both old and new map formats
     for _, map in pairs(Workspace.Maps:GetChildren()) do
         if map:FindFirstChild("ItemHuntFolder") then
             local itemPlace = map.ItemHuntFolder:FindFirstChild("ItemPlace")
             if itemPlace then
                 for _, item in pairs(itemPlace:GetChildren()) do
-                    if item.Name:match("^LockDoor_" .. map.Name) then
-                        local controlPart = item:FindFirstChild("ControlPart")
-                        if controlPart and controlPart:FindFirstChild("InteractPrompt") then
-                            local billboard = Instance.new("BillboardGui")
-                            billboard.Name = "ControlPartBillboard"
-                            billboard.Size = UDim2.new(0, 50, 0, 20) -- Small size for the billboard
-                            billboard.StudsOffset = Vector3.new(0, 2, 0)
-                            billboard.AlwaysOnTop = true
-                            billboard.Enabled = billboardVisible -- Set initial visibility
-                            billboard.Adornee = controlPart
+                    local controlPart = item:FindFirstChild("ControlPart")
+                    if controlPart and controlPart:FindFirstChild("InteractPrompt") then
+                        local billboard = Instance.new("BillboardGui")
+                        billboard.Name = "ControlPartBillboard"
+                        billboard.Size = UDim2.new(0, 50, 0, 20) -- Small size for the billboard
+                        billboard.StudsOffset = Vector3.new(0, 2, 0)
+                        billboard.AlwaysOnTop = true
+                        billboard.Enabled = billboardVisible -- Set initial visibility
+                        billboard.Adornee = controlPart
 
-                            local textLabel = Instance.new("TextLabel")
-                            textLabel.Size = UDim2.new(1, 0, 1, 0)
-                            textLabel.BackgroundTransparency = 1
-                            textLabel.TextStrokeTransparency = 0.8 -- Slightly transparent stroke
-                            textLabel.TextColor3 = Color3.fromRGB(0, 0, 255) -- Blue text color
-                            textLabel.Text = "Doors" -- Changed all billboard text to "Doors"
-                            textLabel.Font = Enum.Font.SourceSansBold
-                            textLabel.TextSize = 12
-                            textLabel.TextStrokeColor3 = Color3.new(0, 0, 0) -- Black outline
-                            textLabel.Parent = billboard
+                        local textLabel = Instance.new("TextLabel")
+                        textLabel.Size = UDim2.new(1, 0, 1, 0)
+                        textLabel.BackgroundTransparency = 1
+                        textLabel.TextStrokeTransparency = 0.8 -- Slightly transparent stroke
+                        textLabel.TextColor3 = Color3.fromRGB(0, 0, 255) -- Blue text color
+                        textLabel.Text = "Doors" -- Changed all billboard text to "Doors"
+                        textLabel.Font = Enum.Font.SourceSansBold
+                        textLabel.TextSize = 12
+                        textLabel.TextStrokeColor3 = Color3.new(0, 0, 0) -- Black outline
+                        textLabel.Parent = billboard
 
-                            billboard.Parent = controlPart
-                            table.insert(billboards, billboard)
-                        end
+                        billboard.Parent = controlPart
+                        table.insert(billboards, billboard)
                     end
                 end
             end
@@ -130,8 +128,16 @@ local function autoFireProximityPrompt()
             local itemPlace = map.ItemHuntFolder:FindFirstChild("ItemPlace")
             if itemPlace then
                 for _, item in pairs(itemPlace:GetChildren()) do
-                    if item.Name:match("^LockDoor_" .. map.Name) then
-                        local controlPart = item:FindFirstChild("ControlPart")
+                    local controlPart = item:FindFirstChild("ControlPart")
+                    local itemName = item.Name
+
+                    -- Check for both old and new map formats
+                    local isOldMapFormat = itemName:match("^LockDoor_" .. map.Name)
+                    local isNewMapFormat = itemName:match("^LockDoor_") and (map.Name == "School" and itemName:match("school")
+                        or map.Name == "DreamPark" and itemName:match("AmusementPark2")
+                        or map.Name == "Steamboat" and itemName:match("Steamer"))
+
+                    if isOldMapFormat or isNewMapFormat then
                         if controlPart and controlPart:FindFirstChild("InteractPrompt") then
                             local proximityPrompt = controlPart.InteractPrompt
                             if autoFireEnabled then
