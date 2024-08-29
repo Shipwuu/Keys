@@ -2,3 +2,5 @@
 "game:GetService("Workspace").Maps.DreamPark.ItemHuntFolder.ItemPlace.LockDoor_AmusementPark2.ControlPart"
 "game:GetService("Workspace").Maps.Steamboat.ItemHuntFolder.ItemPlace.LockDoor_Steamer.ControlPart"
 workspace.Maps.DreamPark.ItemHuntFolder.ItemPlace:GetChildren()[21].ControlPart.InteractPrompt
+
+workspace.Game.GamePlayers.Shipuuwu.SecretKey
