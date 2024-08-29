@@ -37,9 +37,10 @@ local function createToggleButtons()
     local billboardButton = Instance.new("TextButton")
     billboardButton.Name = "BillboardButton"
     billboardButton.Size = UDim2.new(0, 150, 0, 50) -- Button size (150x50 pixels)
-    billboardButton.Position = UDim2.new(1, -300, 1, -200) -- Positioned at the bottom right of the screen
+    billboardButton.Position = UDim2.new(0.5, 75, 0.7, 0) -- Centered but slightly to the bottom right
+    billboardButton.AnchorPoint = Vector2.new(0.5, 0.5) -- Anchor to center of button
     billboardButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Black background color
-    billboardButton.BackgroundTransparency = 0.5 -- Set transparency
+    billboardButton.BackgroundTransparency = 0.8 -- Set high transparency
     billboardButton.TextColor3 = Color3.new(1, 1, 1) -- White text color
     billboardButton.Font = Enum.Font.SourceSansBold
     billboardButton.TextSize = 14
@@ -50,9 +51,10 @@ local function createToggleButtons()
     local autoFireButton = Instance.new("TextButton")
     autoFireButton.Name = "AutoFireButton"
     autoFireButton.Size = UDim2.new(0, 150, 0, 50) -- Button size (150x50 pixels)
-    autoFireButton.Position = UDim2.new(1, -300, 1, -150) -- Positioned above the billboard button
+    autoFireButton.Position = UDim2.new(0.5, 75, 0.7, 60) -- Positioned above the billboard button
+    autoFireButton.AnchorPoint = Vector2.new(0.5, 0.5) -- Anchor to center of button
     autoFireButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Black background color
-    autoFireButton.BackgroundTransparency = 0.5 -- Set transparency
+    autoFireButton.BackgroundTransparency = 0.8 -- Set high transparency
     autoFireButton.TextColor3 = Color3.new(1, 1, 1) -- White text color
     autoFireButton.Font = Enum.Font.SourceSansBold
     autoFireButton.TextSize = 14
@@ -195,6 +197,7 @@ end
 billboardButton.MouseButton1Click:Connect(function()
     billboardEnabled = not billboardEnabled
     billboardButton.Text = billboardEnabled and "Billboard: ON" or "Billboard: OFF"
+    billboardButton.BackgroundColor3 = billboardEnabled and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0) -- Green if ON, black if OFF
     
     -- Clear billboards when the toggle is turned off
     if not billboardEnabled then
@@ -205,6 +208,7 @@ end)
 autoFireButton.MouseButton1Click:Connect(function()
     autoFireEnabled = not autoFireEnabled
     autoFireButton.Text = autoFireEnabled and "Auto Fire: ON" or "Auto Fire: OFF"
+    autoFireButton.BackgroundColor3 = autoFireEnabled and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0) -- Green if ON, black if OFF
 end)
 
 -- Main loop
