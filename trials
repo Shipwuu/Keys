@@ -178,6 +178,26 @@ local function clearBillboards()
     table.clear(billboards)
 end
 
+-- Function to set HoldDuration of InteractPrompt to 2 seconds
+local function setHoldDurationToTwoSeconds()
+    for _, map in pairs(Workspace.Maps:GetChildren()) do
+        if map:FindFirstChild("ItemHuntFolder") then
+            local itemFolder = map.ItemHuntFolder:FindFirstChild("ItemPlace")
+            if itemFolder then
+                for _, item in pairs(itemFolder:GetChildren()) do
+                    local controlPart = item:FindFirstChild("ControlPart")
+                    if controlPart then
+                        local interactPrompt = controlPart:FindFirstChild("InteractPrompt")
+                        if interactPrompt then
+                            interactPrompt.HoldDuration = 2 -- Set HoldDuration to 2 seconds
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
 -- Function to manage the state based on key detection
 local function manageState()
     if not billboardEnabled and not autoFireEnabled then return end  -- Only run detection if any toggle is ON
@@ -192,6 +212,11 @@ local function manageState()
         if autoFireEnabled then autoFireProximityPrompt("Keys") end
     end
 end
+
+-- Continuously update HoldDuration
+RunService.RenderStepped:Connect(function()
+    setHoldDurationToTwoSeconds()  -- Continuously set HoldDuration to 2 seconds
+end)
 
 -- Toggle button functions
 billboardButton.MouseButton1Click:Connect(function()
@@ -211,7 +236,7 @@ autoFireButton.MouseButton1Click:Connect(function()
     autoFireButton.BackgroundColor3 = autoFireEnabled and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0) -- Green if ON, black if OFF
 end)
 
--- Main loop
+-- Main loop for managing state
 RunService.RenderStepped:Connect(function()
     manageState()
 end)
