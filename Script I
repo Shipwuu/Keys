@@ -3,117 +3,150 @@ local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local RunService = game:GetService("RunService")
 
--- Get the player's GUI
+-- Get the player's GUI and wait for it to load
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
--- Check for existing GUI elements and destroy if found (to prevent duplication)
-local existingButtonGui = playerGui:FindFirstChild("ControlPartButtonGui")
-if existingButtonGui then
-    existingButtonGui:Destroy()
-end
-
--- Create a ScreenGui for the control part buttons
-local buttonGui = Instance.new("ScreenGui")
-buttonGui.Name = "ControlPartButtonGui"
-buttonGui.Parent = playerGui
-buttonGui.ResetOnSpawn = false
-
--- Create the auto fire toggle button
-local autoFireButton = Instance.new("TextButton")
-autoFireButton.Name = "AutoFireButton"
-autoFireButton.Size = UDim2.new(0, 100, 0, 50) -- Button size (100x50 pixels)
-autoFireButton.Position = UDim2.new(1, -400, 1, -100) -- Positioned at the bottom right of the screen
-autoFireButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Black background color
-autoFireButton.BackgroundTransparency = 0.5 -- Set transparency
-autoFireButton.TextColor3 = Color3.new(1, 1, 1) -- White text color
-autoFireButton.Font = Enum.Font.SourceSansBold
-autoFireButton.TextSize = 14
-autoFireButton.Text = "Toggle Auto Fire"
-autoFireButton.Parent = buttonGui
-
--- Add UICorner to the button for rounded edges
-local corner1 = Instance.new("UICorner")
-corner1.Parent = autoFireButton
-
--- Create the billboard toggle button
-local billboardButton = Instance.new("TextButton")
-billboardButton.Name = "BillboardButton"
-billboardButton.Size = UDim2.new(0, 100, 0, 50) -- Button size (100x50 pixels)
-billboardButton.Position = UDim2.new(1, -400, 1, -160) -- Positioned just above the auto fire button
-billboardButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Black background color
-billboardButton.BackgroundTransparency = 0.5 -- Set transparency
-billboardButton.TextColor3 = Color3.new(1, 1, 1) -- White text color
-billboardButton.Font = Enum.Font.SourceSansBold
-billboardButton.TextSize = 14
-billboardButton.Text = "Toggle Billboard"
-billboardButton.Parent = buttonGui
-
--- Add UICorner to the button for rounded edges
-local corner2 = Instance.new("UICorner")
-corner2.Parent = billboardButton
-
--- Variables to keep track of auto fire and billboard state
-local autoFireEnabled = false
-local billboardVisible = false
-local billboards = {}
-
--- Function to toggle auto fire
-local function toggleAutoFire()
-    autoFireEnabled = not autoFireEnabled
-    autoFireButton.Text = autoFireEnabled and "Auto Fire: ON" or "Auto Fire: OFF"
-    autoFireButton.BackgroundColor3 = autoFireEnabled and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
-    autoFireButton.BackgroundTransparency = 0.5
-end
-
--- Function to toggle the visibility of all billboards
-local function toggleBillboards()
-    billboardVisible = not billboardVisible
-    billboardButton.Text = billboardVisible and "Hide Billboards" or "Show Billboards"
-    billboardButton.BackgroundColor3 = billboardVisible and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
-    billboardButton.BackgroundTransparency = 0.5
-    for _, billboard in pairs(billboards) do
-        billboard.Enabled = billboardVisible
+-- Function to ensure the player's character and HumanoidRootPart are loaded
+local function waitForCharacter()
+    while not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") do
+        player.CharacterAdded:Wait()
     end
 end
 
--- Function to create or update billboards for each ControlPart
-local function updateBillboards()
+-- Wait for the player's character to be fully loaded
+waitForCharacter()
+
+-- Check if playerName is set correctly after character is loaded
+local playerName = player.Name
+
+-- Variables to keep track of key and door states
+local autoFireEnabled = false
+local billboardEnabled = false
+local billboards = {}
+
+-- Function to create toggle buttons
+local function createToggleButtons()
+    -- Create a ScreenGui for the buttons
+    local buttonGui = Instance.new("ScreenGui")
+    buttonGui.Name = "ToggleButtonGui"
+    buttonGui.Parent = playerGui
+    buttonGui.ResetOnSpawn = false
+
+    -- Create the Billboard toggle button
+    local billboardButton = Instance.new("TextButton")
+    billboardButton.Name = "BillboardButton"
+    billboardButton.Size = UDim2.new(0, 100, 0, 50) -- Button size (150x50 pixels)
+    billboardButton.Position = UDim2.new(1, -280, 1, -160) -- Centered but slightly to the bottom right
+    billboardButton.AnchorPoint = Vector2.new(0.5, 0.5) -- Anchor to center of button
+    billboardButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Black background color
+    billboardButton.BackgroundTransparency = 0.8 -- Set high transparency
+    billboardButton.TextColor3 = Color3.new(1, 1, 1) -- White text color
+    billboardButton.Font = Enum.Font.SourceSansBold
+    billboardButton.TextSize = 14
+    billboardButton.Text = "Billboard: OFF"
+    billboardButton.Parent = buttonGui
+
+    -- Create the Auto Fire toggle button
+    local autoFireButton = Instance.new("TextButton")
+    autoFireButton.Name = "AutoFireButton"
+    autoFireButton.Size = UDim2.new(0, 100, 0, 50) -- Button size (150x50 pixels)
+    autoFireButton.Position = UDim2.new(1, -280, 1, -100) -- Positioned above the billboard button
+    autoFireButton.AnchorPoint = Vector2.new(0.5, 0.5) -- Anchor to center of button
+    autoFireButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Black background color
+    autoFireButton.BackgroundTransparency = 0.8 -- Set high transparency
+    autoFireButton.TextColor3 = Color3.new(1, 1, 1) -- White text color
+    autoFireButton.Font = Enum.Font.SourceSansBold
+    autoFireButton.TextSize = 14
+    autoFireButton.Text = "Auto Fire: OFF"
+    autoFireButton.Parent = buttonGui
+
+    -- Add UICorner to the buttons for rounded edges
+    local corner1 = Instance.new("UICorner")
+    corner1.Parent = billboardButton
+
+    local corner2 = Instance.new("UICorner")
+    corner2.Parent = autoFireButton
+
+    return billboardButton, autoFireButton
+end
+
+-- Initialize buttons
+local billboardButton, autoFireButton = createToggleButtons()
+
+-- Function to create or update billboards for the closest keys or doors
+local function updateBillboards(targetPath)
+    if not billboardEnabled then return end  -- Exit if billboards are disabled
+
     -- Clear old billboards
     for _, billboard in pairs(billboards) do
         billboard:Destroy()
     end
     table.clear(billboards)
 
-    -- Create new billboards for both old and new map formats
+    local pathsWithDistance = {}  -- Store paths with their distance to the player
+
+    -- Check the path for keys or doors
     for _, map in pairs(Workspace.Maps:GetChildren()) do
         if map:FindFirstChild("ItemHuntFolder") then
-            local itemPlace = map.ItemHuntFolder:FindFirstChild("ItemPlace")
-            if itemPlace then
-                for _, item in pairs(itemPlace:GetChildren()) do
-                    local controlPart = item:FindFirstChild("ControlPart")
-                    if controlPart and controlPart:FindFirstChild("InteractPrompt") then
-                        local billboard = Instance.new("BillboardGui")
-                        billboard.Name = "ControlPartBillboard"
-                        billboard.Size = UDim2.new(0, 50, 0, 20) -- Small size for the billboard
-                        billboard.StudsOffset = Vector3.new(0, 2, 0)
-                        billboard.AlwaysOnTop = true
-                        billboard.Enabled = billboardVisible -- Set initial visibility
-                        billboard.Adornee = controlPart
+            local itemFolder = targetPath == "Keys" and map.ItemHuntFolder:FindFirstChild("ItemSpawn") or map.ItemHuntFolder:FindFirstChild("ItemPlace")
+            if itemFolder then
+                for _, item in pairs(itemFolder:GetChildren()) do
+                    local targetPoint = targetPath == "Keys" and (item:FindFirstChild("SpawnPoint_1") or item:FindFirstChild("Point_1")) or item:FindFirstChild("ControlPart")
+                    if targetPoint and targetPoint:FindFirstChild("InteractPrompt") then
+                        local distance = (player.Character.HumanoidRootPart.Position - targetPoint.Position).Magnitude
+                        table.insert(pathsWithDistance, {targetPoint = targetPoint, distance = distance})
+                    end
+                end
+            end
+        end
+    end
 
-                        local textLabel = Instance.new("TextLabel")
-                        textLabel.Size = UDim2.new(1, 0, 1, 0)
-                        textLabel.BackgroundTransparency = 1
-                        textLabel.TextStrokeTransparency = 0.8 -- Slightly transparent stroke
-                        textLabel.TextColor3 = Color3.fromRGB(0, 0, 255) -- Blue text color
-                        textLabel.Text = "Doors" -- Changed all billboard text to "Doors"
-                        textLabel.Font = Enum.Font.SourceSansBold
-                        textLabel.TextSize = 12
-                        textLabel.TextStrokeColor3 = Color3.new(0, 0, 0) -- Black outline
-                        textLabel.Parent = billboard
+    -- Sort the paths based on distance from the player
+    table.sort(pathsWithDistance, function(a, b) return a.distance < b.distance end)
 
-                        billboard.Parent = controlPart
-                        table.insert(billboards, billboard)
+    -- Only display billboards for the closest 10 paths
+    for i = 1, math.min(10, #pathsWithDistance) do
+        local targetPoint = pathsWithDistance[i].targetPoint
+        local billboard = Instance.new("BillboardGui")
+        billboard.Name = "TargetBillboard"
+        billboard.Size = UDim2.new(0, 50, 0, 20) -- Small size for the billboard
+        billboard.StudsOffset = Vector3.new(0, 2, 0)
+        billboard.AlwaysOnTop = true
+        billboard.Enabled = true
+        billboard.Adornee = targetPoint
+
+        local textLabel = Instance.new("TextLabel")
+        textLabel.Size = UDim2.new(1, 0, 1, 0)
+        textLabel.BackgroundTransparency = 1
+        textLabel.TextStrokeTransparency = 0.8 -- Slightly transparent stroke
+        textLabel.TextColor3 = targetPath == "Keys" and Color3.fromRGB(255, 255, 0) or Color3.fromRGB(0, 0, 255) -- Yellow for keys, blue for doors
+        textLabel.Text = targetPath == "Keys" and "Keys" or "Doors"
+        textLabel.Font = Enum.Font.SourceSansBold
+        textLabel.TextSize = 12
+        textLabel.TextStrokeColor3 = Color3.new(0, 0, 0) -- Black outline
+        textLabel.Parent = billboard
+
+        billboard.Parent = targetPoint
+        table.insert(billboards, billboard)
+    end
+end
+
+-- Function to auto fire proximity prompt
+local function autoFireProximityPrompt(targetPath)
+    if not autoFireEnabled then return end  -- Exit if auto fire is disabled
+
+    for _, map in pairs(Workspace.Maps:GetChildren()) do
+        if map:FindFirstChild("ItemHuntFolder") then
+            local itemFolder = targetPath == "Keys" and map.ItemHuntFolder:FindFirstChild("ItemSpawn") or map.ItemHuntFolder:FindFirstChild("ItemPlace")
+            if itemFolder then
+                for _, item in pairs(itemFolder:GetChildren()) do
+                    local targetPoint = targetPath == "Keys" and (item:FindFirstChild("SpawnPoint_1") or item:FindFirstChild("Point_1")) or item:FindFirstChild("ControlPart")
+                    if targetPoint and targetPoint:FindFirstChild("InteractPrompt") then
+                        local proximityPrompt = targetPoint.InteractPrompt
+                        pcall(function()
+                            fireproximityprompt(proximityPrompt)
+                        end)
                     end
                 end
             end
@@ -121,30 +154,42 @@ local function updateBillboards()
     end
 end
 
--- Function to auto fire proximity prompt
-local function autoFireProximityPrompt()
+-- Function to check if the player has the key
+local function checkForKey()
+    -- Ensure playerName is not nil
+    if not playerName then
+        playerName = player.Name  -- Reassign playerName if it was nil
+    end
+
+    -- Ensure player path is not nil
+    local playerPath = Workspace.Game.GamePlayers:FindFirstChild(playerName)
+    if not playerPath then
+        return false  -- If playerPath is nil, return false to prevent errors
+    end
+
+    return playerPath:FindFirstChild("SecretKey") ~= nil
+end
+
+-- Function to remove all billboards
+local function clearBillboards()
+    for _, billboard in pairs(billboards) do
+        billboard:Destroy()
+    end
+    table.clear(billboards)
+end
+
+-- Function to set HoldDuration of InteractPrompt to 2 seconds
+local function setHoldDurationToTwoSeconds()
     for _, map in pairs(Workspace.Maps:GetChildren()) do
         if map:FindFirstChild("ItemHuntFolder") then
-            local itemPlace = map.ItemHuntFolder:FindFirstChild("ItemPlace")
-            if itemPlace then
-                for _, item in pairs(itemPlace:GetChildren()) do
+            local itemFolder = map.ItemHuntFolder:FindFirstChild("ItemPlace")
+            if itemFolder then
+                for _, item in pairs(itemFolder:GetChildren()) do
                     local controlPart = item:FindFirstChild("ControlPart")
-                    local itemName = item.Name
-
-                    -- Check for both old and new map formats
-                    local isOldMapFormat = itemName:match("^LockDoor_" .. map.Name)
-                    local isNewMapFormat = itemName:match("^LockDoor_") and (map.Name == "School" and itemName:match("school")
-                        or map.Name == "DreamPark" and itemName:match("AmusementPark2")
-                        or map.Name == "Steamboat" and itemName:match("Steamer"))
-
-                    if isOldMapFormat or isNewMapFormat then
-                        if controlPart and controlPart:FindFirstChild("InteractPrompt") then
-                            local proximityPrompt = controlPart.InteractPrompt
-                            if autoFireEnabled then
-                                pcall(function()
-                                    fireproximityprompt(proximityPrompt)
-                                end)
-                            end
+                    if controlPart then
+                        local interactPrompt = controlPart:FindFirstChild("InteractPrompt")
+                        if interactPrompt then
+                            interactPrompt.HoldDuration = 0.8 -- Set HoldDuration to 2 seconds
                         end
                     end
                 end
@@ -153,14 +198,45 @@ local function autoFireProximityPrompt()
     end
 end
 
--- Connect button click to execute the toggle functions
-autoFireButton.MouseButton1Click:Connect(toggleAutoFire)
-billboardButton.MouseButton1Click:Connect(toggleBillboards)
+-- Function to manage the state based on key detection
+local function manageState()
+    if not billboardEnabled and not autoFireEnabled then return end  -- Only run detection if any toggle is ON
 
--- Start monitoring and auto firing
-RunService.RenderStepped:Connect(function()
-    if autoFireEnabled then
-        autoFireProximityPrompt()
+    local keyDetected = checkForKey()
+
+    if keyDetected then
+        if billboardEnabled then updateBillboards("ControlPart") end
+        if autoFireEnabled then autoFireProximityPrompt("ControlPart") end
+    else
+        if billboardEnabled then updateBillboards("Keys") end
+        if autoFireEnabled then autoFireProximityPrompt("Keys") end
     end
-    updateBillboards() -- Continuously update billboards
+end
+
+-- Continuously update HoldDuration
+RunService.RenderStepped:Connect(function()
+    setHoldDurationToTwoSeconds()  -- Continuously set HoldDuration to 2 seconds
+end)
+
+-- Toggle button functions
+billboardButton.MouseButton1Click:Connect(function()
+    billboardEnabled = not billboardEnabled
+    billboardButton.Text = billboardEnabled and "Billboard: ON" or "Billboard: OFF"
+    billboardButton.BackgroundColor3 = billboardEnabled and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0) -- Green if ON, black if OFF
+    
+    -- Clear billboards when the toggle is turned off
+    if not billboardEnabled then
+        clearBillboards()
+    end
+end)
+
+autoFireButton.MouseButton1Click:Connect(function()
+    autoFireEnabled = not autoFireEnabled
+    autoFireButton.Text = autoFireEnabled and "Auto Fire: ON" or "Auto Fire: OFF"
+    autoFireButton.BackgroundColor3 = autoFireEnabled and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0) -- Green if ON, black if OFF
+end)
+
+-- Main loop for managing state
+RunService.RenderStepped:Connect(function()
+    manageState()
 end)
