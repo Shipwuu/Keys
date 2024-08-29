@@ -1,4 +1,5 @@
 local urls = {
+    "https://raw.githubusercontent.com/Shipwuu/Keys/main/Script%20I",
     "https://raw.githubusercontent.com/Shipwuu/Keys/main/Script%20II",
     "https://raw.githubusercontent.com/Shipwuu/Keys/main/Script%20III"
 }
